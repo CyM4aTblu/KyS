@@ -1,14 +1,11 @@
-FROM python:3.12.2-alpine3.19
+FROM python:3.10.14-slim-bookworm
 
 WORKDIR /app
 
-RUN apk upgrade --no-cache
+COPY pyproject.toml .
 
-RUN pip install poetry
+RUN pip install .
 
-COPY ./api/ pyproject.toml poetry.lock /app/
+COPY manage.py rights_verification_system access ./
 
-RUN poetry config virtualenvs.create false  \
-    && poetry install --no-dev
-
-CMD poetry run gunicorn
+CMD gunicorn --workers=4 -b=0.0.0.0:$PORT rights_verification_system.wsgi:application

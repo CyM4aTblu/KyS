@@ -7,14 +7,10 @@ services:
       dockerfile: docker/django/Dockerfile
     container_name: django
     env_file: docker/django/.env
-#    expose:
-#      - 8000
-#    command:
-#      -
-    ports:
-      - "8000:8000"
+    expose:
+      - 8000
     networks:
-      [ idanpow ]
+      [ Mikhauluk ]
 
   nginx:
     build:
@@ -24,10 +20,10 @@ services:
     ports:
       - "80:80"
     networks:
-      [ idanpow ]
+      [ Mikhauluk ]
     depends_on:
       - django
 
 networks:
-  idanpow:
-    name: idanpow
+  Mikhauluk:
+    name: Mikhauluk
