@@ -9,7 +9,8 @@ dependencies=[
     "djangorestframework~=3.15.1",
     "drf-spectacular~=0.27.1",
     "apscheduler~=3.10.4",
-    "gunicorn~=22.0.0"
+    "gunicorn~=22.0.0",
+    "django-cors-headers~=4.3.1"
 ]
 
 [build-system]

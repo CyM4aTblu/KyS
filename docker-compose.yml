@@ -23,7 +23,17 @@ services:
       [ Mikhauluk ]
     depends_on:
       - django
+      - frontend
 
+  frontend:
+    container_name: frontend
+    image: nginx:alpine3.19-slim
+    volumes:
+      - ./front:/usr/share/nginx/html
+    expose:
+      - 80
+    networks:
+      [ Mikhauluk ]
 networks:
   Mikhauluk:
     name: Mikhauluk

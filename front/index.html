@@ -22,7 +22,7 @@
     <script>
         function processText(method) {
             var text = document.getElementById("textInput").value;
-            fetch(`http://127.0.0.1:8000/process-text-${method}/`,
+            fetch(`http://127.0.0.1/process-text-${method}/`,
             {
                 method: "POST",
                 headers: {
@@ -42,7 +42,7 @@
         function processTextByCount(method) {
             var text = document.getElementById("textInput").value;
             var count = Number(prompt("Enter the count:"));
-            fetch(`http://127.0.0.1:8000/process-text-${method}/`,
+            fetch(`http://127.0.0.1/process-text-${method}/`,
             {
                 method: "PATCH",
                 headers: {
