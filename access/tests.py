@@ -9,7 +9,7 @@ from rest_framework.test import APITestCase, APIRequestFactory
 from .models import AccessRights, AccessLogStatus, AccessLogEntry
 from .services.access_service import AccessService
 from .services.log_service import LogService
-from .views import AccessViewSet
+from .views import ReplaceViewSet
 
 
 # Unit Tests
@@ -159,22 +159,22 @@ class DistanceEducationSystemTests(APITestCase):
 
     def test_post_access_success(self):
         request = self.factory.post("/access", self.test_data)
-        response = AccessViewSet.as_view({"post": "post_access"})(request)
+        response = ReplaceViewSet.as_view({"post": "post_access"})(request)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data, self.test_data)
 
     def test_post_access_validation_error(self):
         request = self.factory.post("/access", {})
-        response = AccessViewSet.as_view({"post": "post_access"})(request)
+        response = ReplaceViewSet.as_view({"post": "post_access"})(request)
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
 
     def test_get_access_success(self):
         request = self.factory.post("/access", self.test_data)
-        AccessViewSet.as_view({"post": "post_access"})(request)
+        ReplaceViewSet.as_view({"post": "post_access"})(request)
 
         desired_response_data = {"read": True, "write": True, "execute": False}
         request = self.factory.get(f"/access?user={self.test_data['user']}&resource={self.test_data['resource']}")
-        response = AccessViewSet.as_view({"get": "get_access"})(request)
+        response = ReplaceViewSet.as_view({"get": "get_access"})(request)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, desired_response_data)
@@ -188,7 +188,7 @@ class DistanceEducationSystemTests(APITestCase):
             }
         }
         request = self.factory.get(f"/access?user={self.test_data['user']}")
-        response = AccessViewSet.as_view({"get": "get_access"})(request)
+        response = ReplaceViewSet.as_view({"get": "get_access"})(request)
 
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
         self.assertEqual(response.data, desired_response_data)
@@ -196,23 +196,23 @@ class DistanceEducationSystemTests(APITestCase):
     def test_get_access_user_not_found(self):
         nonexistent_user = "nonexistent_user"
         request = self.factory.get(f"/access?user={nonexistent_user}&resource={self.test_data['resource']}")
-        response = AccessViewSet.as_view({"get": "get_access"})(request)
+        response = ReplaceViewSet.as_view({"get": "get_access"})(request)
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_get_access_resource_forbidden(self):
         request = self.factory.post("/access", self.test_data)
-        AccessViewSet.as_view({"post": "post_access"})(request)
+        ReplaceViewSet.as_view({"post": "post_access"})(request)
 
         request = self.factory.get(f"/access?user={self.test_data['user']}&resource={'image'}")
-        response = AccessViewSet.as_view({"get": "get_access"})(request)
+        response = ReplaceViewSet.as_view({"get": "get_access"})(request)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_log_file_success(self):
 
         request = self.factory.get("/log")
-        response = AccessViewSet.as_view({"get": "get_log_file"})(request)
+        response = ReplaceViewSet.as_view({"get": "get_log_file"})(request)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["done"], False)
@@ -228,13 +228,13 @@ class DistanceEducationSystemTests(APITestCase):
         }
 
         request = self.factory.get("/log")
-        response = AccessViewSet.as_view({"get": "get_log_file"})(request)
+        response = ReplaceViewSet.as_view({"get": "get_log_file"})(request)
         desired_response_data["id"] = response.data['id']
 
         time.sleep(1)
 
         request = self.factory.get(f"/log/status?id={response.data['id']}")
-        response = AccessViewSet.as_view({"get": "get_log_file_status"})(request)
+        response = ReplaceViewSet.as_view({"get": "get_log_file_status"})(request)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, desired_response_data)
@@ -248,13 +248,13 @@ class DistanceEducationSystemTests(APITestCase):
             }
         }
         request = self.factory.get("/log/status?cannot=validate")
-        response = AccessViewSet.as_view({"get": "get_log_file_status"})(request)
+        response = ReplaceViewSet.as_view({"get": "get_log_file_status"})(request)
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
         self.assertEqual(response.data, desired_response_data)
 
     def test_get_log_file_status_not_found(self):
         op_id = uuid4()
         request = self.factory.get(f"/log/status?id={op_id}")
-        response = AccessViewSet.as_view({"get": "get_log_file_status"})(request)
+        response = ReplaceViewSet.as_view({"get": "get_log_file_status"})(request)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 

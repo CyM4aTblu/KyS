@@ -19,47 +19,31 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
-from access.views import AccessViewSet
+from access.views import ReplaceViewSet
 
 urlpatterns = [
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='docs'),
+
     path(
-        "access",
-        AccessViewSet.as_view(
+        "process-text-i/",
+        ReplaceViewSet.as_view(
             {
-                "post": "post_access",
-                "get": "get_access",
+                "post": "process_text_i",
+                "patch": "patch_text_i_by_count",
             }
         ),
-        name="access_ops",
+        name="process_text_i",
     ),
     path(
-        "access/forbidden",
-        AccessViewSet.as_view(
+        "process-text-e/",
+        ReplaceViewSet.as_view(
             {
-                "get": "get_forbidden",
+                "post": "process_text_e",
+                "patch": "patch_text_e_by_count",
             }
         ),
-        name="forbidden_ops",
-    ),
-    path(
-        "log/",
-        AccessViewSet.as_view(
-            {
-                "get": "get_log_file",
-            }
-        ),
-        name="get_log_file",
-    ),
-    path(
-        "log/status/",
-        AccessViewSet.as_view(
-            {
-                "get": "get_log_file_status",
-            }
-        ),
-        name="get_log_file_status",
+        name="process_text_e",
     ),
 
-] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+]

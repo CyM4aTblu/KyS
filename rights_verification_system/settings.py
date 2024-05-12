@@ -29,7 +29,6 @@ ALLOWED_HOSTS = []
 
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -40,12 +39,15 @@ INSTALLED_APPS = [
     'rest_framework',
     'drf_spectacular',
     'access',
+    "corsheaders",
 ]
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -80,13 +82,12 @@ REST_FRAMEWORK = {
 }
 
 SPECTACULAR_SETTINGS = {
-    "TITLE": "Rights verification system API",
+    "TITLE": "Letters replace system",
     "DESCRIPTION": "API to manage user access to resources",
     "VERSION": "0.0.1",
     "SERVE_INCLUDE_SCHEMA": False,
 }
-
-
+CORS_ALLOW_ALL_ORIGINS = True
 
 WSGI_APPLICATION = 'rights_verification_system.wsgi.application'
 

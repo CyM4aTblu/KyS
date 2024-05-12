@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Processing</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Text Processing</h1>
+    
+    <textarea id="textInput" rows="4" cols="50"></textarea><br><br>
+    
+    <button onclick="processText('e')">Process Text (Replace ё with е)</button>
+    <button onclick="processTextByCount('e')">Process Text by Count (Replace ё with е by Count)</button><br><br>
+    
+    <button onclick="processText('i')">Process Text (Replace й with и)</button>
+    <button onclick="processTextByCount('i')">Process Text by Count (Replace й with и by Count)</button><br><br>
+    
+    <div id="output"></div>
+    
+    <script>
+        function processText(method) {
+            var text = document.getElementById("textInput").value;
+            fetch(`http://127.0.0.1:8000/process-text-${method}/`,
+            {
+                method: "POST",
+                headers: {
+                        'Content-Type': 'application/json',
+                    },
+                body: JSON.stringify({
+                    "text": text
+                })
+            }
+            )
+            .then(response => response.text())
+            .then(result => {
+                document.getElementById("output").innerText = result;
+            });
+        }
+
+        function processTextByCount(method) {
+            var text = document.getElementById("textInput").value;
+            var count = Number(prompt("Enter the count:"));
+            fetch(`http://127.0.0.1:8000/process-text-${method}/`,
+            {
+                method: "PATCH",
+                headers: {
+                        'Content-Type': 'application/json',
+                    },
+                body: JSON.stringify({
+                        "text": text,
+                        "count": count
+                })
+            }
+            )
+            .then(response => response.text())
+            .then(result => {
+                document.getElementById("output").innerText = result;
+            });
+        }
+    </script>
+</body>
+</html>

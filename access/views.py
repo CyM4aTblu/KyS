@@ -1,5 +1,6 @@
 from uuid import UUID
-
+from django.http import JsonResponse
+import re
 from django.shortcuts import render
 from drf_spectacular.utils import extend_schema_view, extend_schema
 from rest_framework import status
@@ -13,151 +14,102 @@ from .services.log_service import LogService
 from .serializers import (
     ModifyAccessSerializer,
     ValidationErrorSerializer,
-    CheckAccessSerializer,
-    AccessSerializer,
-    ForbiddenAccessSerializer,
-    OperationSerializer,
-    GetOperationQuerySerializer,
+    ReplaceTextSerializer, QueryHistorySerializer, HistoryEntrySerializer, ReplaceTextByCountSerializer
 )
+
 from .services.ops_service import OperationsService
+from .services.replaceservices import ReplaceService
 
 
-@extend_schema_view(
-    post_access=extend_schema(
-        summary="Post new user access to resource",
-        request=ModifyAccessSerializer,
+class ReplaceViewSet(ViewSet):
+    @extend_schema(
+        summary="Replace the letters 'ё' with 'е'",
+        request=ReplaceTextSerializer,
         responses={
-            status.HTTP_201_CREATED: ModifyAccessSerializer,
+            status.HTTP_200_OK: ReplaceTextSerializer,
             status.HTTP_422_UNPROCESSABLE_ENTITY: ValidationErrorSerializer,
         },
         auth=False,
-    ),
-    get_access=extend_schema(
-        summary="User access rights to resource",
-        parameters=[CheckAccessSerializer],
-        responses={
-            status.HTTP_200_OK: AccessSerializer,
-            status.HTTP_403_FORBIDDEN: None,
-            status.HTTP_404_NOT_FOUND: None,
-            status.HTTP_422_UNPROCESSABLE_ENTITY: ValidationErrorSerializer,
-        },
-        auth=False,
-    ),
-    get_forbidden=extend_schema(
-        summary="Get forbidden accesses",
-        responses={
-            status.HTTP_200_OK: ForbiddenAccessSerializer,
-        },
-        auth=False,
-    ),
-    get_log_file=extend_schema(
-        summary="Generate log.csv and get operation details",
-        responses={
-            status.HTTP_200_OK: OperationSerializer,
-        },
-        auth=False,
-    ),
-    get_log_file_status=extend_schema(
-        summary="Get log generation status",
-        parameters=[GetOperationQuerySerializer],
-        responses={
-            status.HTTP_200_OK: OperationSerializer,
-            status.HTTP_404_NOT_FOUND: None,
-            status.HTTP_422_UNPROCESSABLE_ENTITY: ValidationErrorSerializer,
-        },
-        auth=False,
-    ),
-)
-class AccessViewSet(ViewSet):
-    access_service = AccessService()
-    log_service = LogService()
-    ops_service = OperationsService()
-
+    )
     @action(detail=False, methods=["POST"])
-    def post_access(self, request):
-        in_access = ModifyAccessSerializer(data=request.data)
-        if not in_access.is_valid():
+    def process_text_e(self, request):
+        in_text = ReplaceTextSerializer(data=request.data)
+        if not in_text.is_valid():
             return Response(
                 status=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                data=ValidationErrorSerializer({"errors": in_access.errors}).data,
+                data=ValidationErrorSerializer({"errors": in_text.errors}).data,
             )
-
-        self.access_service.add_entry(**in_access.data)
+        out_text = ReplaceService.replace_e(in_text.data["text"])
         return Response(
-            status=status.HTTP_201_CREATED,
-            data=ModifyAccessSerializer(in_access.data).data
+            status=status.HTTP_200_OK,
+            data=ReplaceTextSerializer({"text": out_text}).data
         )
 
-    @action(detail=False, methods=["GET"])
-    def get_access(self, request):
-        query_ser = CheckAccessSerializer(data=request.query_params)
-        if not query_ser.is_valid():
+    @extend_schema(
+        summary="Replace the letters 'й' with 'и'",
+        request=ReplaceTextSerializer,
+        responses={
+            status.HTTP_200_OK: ReplaceTextSerializer,
+            status.HTTP_422_UNPROCESSABLE_ENTITY: ValidationErrorSerializer,
+        },
+        auth=False,
+    )
+    @action(detail=False, methods=["POST"])
+    def process_text_i(self, request):
+        in_text = ReplaceTextSerializer(data=request.data)
+        if not in_text.is_valid():
             return Response(
                 status=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                data=ValidationErrorSerializer({"errors": query_ser.errors}).data,
+                data=ValidationErrorSerializer({"errors": in_text.errors}).data,
             )
-
-        access = self.access_service.check_access(**query_ser.data)
-
-        if access is AccessLogStatus.USER_NOT_FOUND:
-            self.log_service.write_entry(**query_ser.data, status=access)
-            return Response(
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        if access is AccessLogStatus.RESOURCE_NOT_FOUND:
-            self.log_service.write_entry(**query_ser.data, status=access)
-            return Response(
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
-        self.log_service.write_entry(**query_ser.data, status=AccessLogStatus.SUCCESS)
+        out_text = ReplaceService.replace_i(in_text.data["text"])
         return Response(
             status=status.HTTP_200_OK,
-            data=AccessSerializer(access).data,
+            data=ReplaceTextSerializer({"text": out_text}).data
         )
 
-    @action(detail=False, methods=["GET"])
-    def get_forbidden(self, _):
-        forbidden = self.access_service.get_forbidden_access()
-        return Response(
-            status=status.HTTP_200_OK,
-            data=ForbiddenAccessSerializer({"forbidden": forbidden}).data,
-        )
-
-    @action(detail=False, methods=["GET"])
-    def get_log_file(self, _):
-        op_id = self.ops_service.execute_operation(self.log_service.get_log_file_path)
-        op = self.ops_service.get_operation(op_id)
-        return Response(
-            status=status.HTTP_200_OK,
-            data=OperationSerializer(op).data,
-        )
-
-    @action(detail=False, methods=["GET"])
-    def get_log_file_status(self, request):
-        query_ser = GetOperationQuerySerializer(data=request.query_params)
-        if not query_ser.is_valid():
+    @extend_schema(
+        summary="Replace the letters 'й' with 'и' by count",
+        request=ReplaceTextByCountSerializer,
+        responses={
+            status.HTTP_200_OK: ReplaceTextSerializer,
+            status.HTTP_422_UNPROCESSABLE_ENTITY: ValidationErrorSerializer,
+        },
+        auth=False,
+    )
+    @action(detail=False, methods=["PATCH"])
+    def patch_text_i_by_count(self, request):
+        in_text = ReplaceTextByCountSerializer(data=request.data)
+        if not in_text.is_valid():
             return Response(
                 status=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                data=ValidationErrorSerializer({"errors": query_ser.errors}).data,
+                data=ValidationErrorSerializer({"errors": in_text.errors}).data,
             )
-
-        op = self.ops_service.get_operation(UUID(query_ser.data.get("id")))
-        if op is None:
-            return Response(
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
+        out_text = ReplaceService.replace_i_by_count(in_text.data["text"], in_text.data["count"])
         return Response(
             status=status.HTTP_200_OK,
-            data=OperationSerializer(
-                {
-                    "id": op.id,
-                    "done": op.done,
-                    "result": {
-                        "path": op.result,
-                    },
-                }
-            ).data,
+            data=ReplaceTextSerializer({"text": out_text}).data
+        )
+
+    @extend_schema(
+        summary="Replace the letters 'ё' with 'е' by count",
+        request=ReplaceTextByCountSerializer,
+        responses={
+            status.HTTP_200_OK: ReplaceTextSerializer,
+            status.HTTP_422_UNPROCESSABLE_ENTITY: ValidationErrorSerializer,
+        },
+        auth=False,
+    )
+    @action(detail=False, methods=["PATCH"])
+    def patch_text_e_by_count(self, request):
+        in_text = ReplaceTextByCountSerializer(data=request.data)
+        if not in_text.is_valid():
+            return Response(
+                status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                data=ValidationErrorSerializer({"errors": in_text.errors}).data,
+            )
+        out_text = ReplaceService.replace_e_by_count(in_text.data["text"], in_text.data["count"])
+        return Response(
+            status=status.HTTP_200_OK,
+            data=ReplaceTextSerializer({"text": out_text}).data
         )

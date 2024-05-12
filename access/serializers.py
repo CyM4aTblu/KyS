@@ -40,3 +40,16 @@ class OperationSerializer(serializers.Serializer):
 
 class GetOperationQuerySerializer(serializers.Serializer):
     id = serializers.UUIDField(required=True)
+
+class ReplaceTextSerializer(serializers.Serializer):
+    text = serializers.CharField(min_length=1, max_length=255, required=True)
+
+class ReplaceTextByCountSerializer(ReplaceTextSerializer):
+    count = serializers.IntegerField(min_value=1, required=True)
+
+class HistoryEntrySerializer(serializers.Serializer):
+    before = serializers.CharField(min_length=2, max_length=255, required=True)
+    after = serializers.CharField(min_length=2, max_length=255, required=True)
+
+class QueryHistorySerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=True, min_value=0)
